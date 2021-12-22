@@ -2,7 +2,7 @@ version: "3.9"
 services:
   db:
     image: postgres:alpine
-    container_name: "comments-database"
+    container_name: "workout-db"
     ports:
       - "5432:5432"
     environment:
@@ -17,7 +17,7 @@ services:
 
   api:
     build: .
-    container_name: "comments-rest-api"
+    container_name: "workout-api"
     environment:
       - DB_USERNAME=${DB_USERNAME:?err}
       - DB_PASSWORD=${DB_PASSWORD:?err}
