@@ -7,13 +7,13 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/thefueley/workout-api/internal/comment"
+	"github.com/thefueley/workout-api/internal/workout"
 )
 
-// Handler : stores pointer to your comments service
+// Handler : stores pointer to workout service
 type Handler struct {
 	Router  *mux.Router
-	Service *comment.Service
+	Service *workout.Service
 }
 
 // Response : store responses from API
@@ -23,7 +23,7 @@ type Response struct {
 }
 
 // NewHandler : returns pointer to a Handler
-func NewHandler(service *comment.Service) *Handler {
+func NewHandler(service *workout.Service) *Handler {
 	return &Handler{
 		Service: service,
 	}
@@ -34,11 +34,11 @@ func (h *Handler) SetupRoutes() {
 	fmt.Println("Setting up Routes")
 	h.Router = mux.NewRouter()
 
-	h.Router.HandleFunc("/api/comment", h.GetAllComments).Methods("GET")
-	h.Router.HandleFunc("/api/comment", h.PostComment).Methods("POST")
-	h.Router.HandleFunc("/api/comment/{id}", h.GetComment).Methods("GET")
-	h.Router.HandleFunc("/api/comment/{id}", h.UpdateComment).Methods("PUT")
-	h.Router.HandleFunc("/api/comment/{id}", h.DeleteComment).Methods("DELETE")
+	h.Router.HandleFunc("/api/workout/{id}", h.GetWorkout).Methods("GET")
+	h.Router.HandleFunc("/api/workout", h.AddWorkout).Methods("POST")
+	h.Router.HandleFunc("/api/workout/{id}", h.UpdateWorkout).Methods("PUT")
+	h.Router.HandleFunc("/api/workout/{id}", h.DeleteWorkout).Methods("DELETE")
+	h.Router.HandleFunc("/api/workout", h.GetAllWorkouts).Methods("GET")
 
 	h.Router.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
 		if err := sendOkResponse(w, Response{Message: "Hooray for me!"}); err != nil {
@@ -47,29 +47,37 @@ func (h *Handler) SetupRoutes() {
 	})
 }
 
-// GetAllComments : get all comments
-func (h *Handler) GetAllComments(w http.ResponseWriter, r *http.Request) {
-	comments, err := h.Service.GetAllComments()
+// GetWorkout : get workout
+func (h *Handler) GetWorkout(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
 
+	i, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
-		sendErrorResponse(w, "Failed to retrieve all comments.\nPunt!", err)
+		sendErrorResponse(w, "Error parsing UINT from ID string.\nPunt!", err)
 		return
 	}
 
-	if err := sendOkResponse(w, comments); err != nil {
+	cmt, err := h.Service.GetWorkout(uint(i))
+	if err != nil {
+		sendErrorResponse(w, "Error retrieving comment by ID.\nPunt", err)
+		return
+	}
+
+	if err := sendOkResponse(w, cmt); err != nil {
 		panic(err)
 	}
 }
 
-// PostComment : post a comment to db
-func (h *Handler) PostComment(w http.ResponseWriter, r *http.Request) {
-	var cmt comment.Comment
-	if err := json.NewDecoder(r.Body).Decode(&cmt); err != nil {
+// AddWorkout : add a workout
+func (h *Handler) AddWorkout(w http.ResponseWriter, r *http.Request) {
+	var work workout.Workout
+	if err := json.NewDecoder(r.Body).Decode(&work); err != nil {
 		sendErrorResponse(w, "Failed to decode JSON Body.\nPunt!", err)
 		return
 	}
 
-	cmt, err := h.Service.PostComment(cmt)
+	cmt, err := h.Service.AddWorkout(work)
 
 	if err != nil {
 		sendErrorResponse(w, "Failed ot post comment.\nPunt!", err)
@@ -81,32 +89,10 @@ func (h *Handler) PostComment(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GetComment : get comment by ID
-func (h *Handler) GetComment(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := vars["id"]
-
-	i, err := strconv.ParseUint(id, 10, 64)
-	if err != nil {
-		sendErrorResponse(w, "Error parsing UINT from ID string.\nPunt!", err)
-		return
-	}
-
-	cmt, err := h.Service.GetComment(uint(i))
-	if err != nil {
-		sendErrorResponse(w, "Error retrieving comment by ID.\nPunt", err)
-		return
-	}
-
-	if err := sendOkResponse(w, cmt); err != nil {
-		panic(err)
-	}
-}
-
-// UpdateComment : update comment in db
-func (h *Handler) UpdateComment(w http.ResponseWriter, r *http.Request) {
-	var cmt comment.Comment
-	if err := json.NewDecoder(r.Body).Decode(&cmt); err != nil {
+// UpdateWorkout : update workout
+func (h *Handler) UpdateWorkout(w http.ResponseWriter, r *http.Request) {
+	var work workout.Workout
+	if err := json.NewDecoder(r.Body).Decode(&work); err != nil {
 		sendErrorResponse(w, "Failed to decode JSON Body.\nPunt!", err)
 		return
 	}
@@ -114,42 +100,56 @@ func (h *Handler) UpdateComment(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	commentID, err := strconv.ParseUint(id, 10, 64)
+	workoutID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		sendErrorResponse(w, "Error parsing UINT from ID string.\nPunt!", err)
 		return
 	}
 
-	cmt, err = h.Service.UpdateComment(uint(commentID), cmt)
+	work, err = h.Service.UpdateComment(uint(workoutID), work)
 
 	if err != nil {
 		sendErrorResponse(w, "Failed to update comment.\nPunt!", err)
 		return
 	}
 
-	if err := sendOkResponse(w, cmt); err != nil {
+	if err := sendOkResponse(w, work); err != nil {
 		panic(err)
 	}
 }
 
-// DeleteComment : delete comment from db
-func (h *Handler) DeleteComment(w http.ResponseWriter, r *http.Request) {
+// DeleteWorkout : delete workout
+func (h *Handler) DeleteWorkout(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	commentID, err := strconv.ParseUint(id, 10, 64)
+	workoutID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		sendErrorResponse(w, "Error parsing UINT from ID string.\nPunt!", err)
 		return
 	}
 
-	err = h.Service.DeleteComment(uint(commentID))
+	err = h.Service.DeleteWorkout(uint(workoutID))
 	if err != nil {
 		sendErrorResponse(w, "Error deleting comment.\nPunt!", err)
 		return
 	}
 
 	if err = sendOkResponse(w, Response{Message: "Poof, message deleted!"}); err != nil {
+		panic(err)
+	}
+}
+
+// GetAllWorkouts : get all workouts
+func (h *Handler) GetAllWorkouts(w http.ResponseWriter, r *http.Request) {
+	workouts, err := h.Service.GetAllWorkouts()
+
+	if err != nil {
+		sendErrorResponse(w, "Failed to retrieve all comments.\nPunt!", err)
+		return
+	}
+
+	if err := sendOkResponse(w, workouts); err != nil {
 		panic(err)
 	}
 }

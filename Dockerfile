@@ -1,6 +1,6 @@
 FROM golang:alpine AS builder
 LABEL maintainer="Chris Rivera <crivera@eismos.io>"
-LABEL description="Comment API Tutorial on tutorialedge.net"
+LABEL description="Workout API"
 
 ENV CGO_ENABLED=0 \
     GOOS=linux

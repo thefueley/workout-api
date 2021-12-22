@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/thefueley/workout-api/internal/comment"
 	"github.com/thefueley/workout-api/internal/database"
 	transportHTTP "github.com/thefueley/workout-api/internal/transport/http"
+	"github.com/thefueley/workout-api/internal/workout"
 )
 
 // db connections
@@ -28,9 +28,9 @@ func (app *App) Run() error {
 		return err
 	}
 
-	commentService := comment.NewService(db)
+	workoutService := workout.NewService(db)
 
-	handler := transportHTTP.NewHandler(commentService)
+	handler := transportHTTP.NewHandler(workoutService)
 	handler.SetupRoutes()
 
 	if err := http.ListenAndServe(":8080", handler.Router); err != nil {
@@ -43,14 +43,9 @@ func (app *App) Run() error {
 
 func main() {
 	fmt.Println(`
-	_______ _______ __   __ __   __ _______ __    _ _______    _______ _______ ___ 
-	|       |       |  |_|  |  |_|  |       |  |  | |       |  |       |       |   |
-	|       |   _   |       |       |    ___|   |_| |_     _|  |   _   |    _  |   |
-	|      _|  | |  |       |       |   |___|       | |   |    |  |_|  |   |_| |   |
-	|     | |  |_|  |       |       |    ___|  _    | |   |    |       |    ___|   |
-	|     |_|       | ||_|| | ||_|| |   |___| | |   | |   |    |   _   |   |   |   |
-	|_______|_______|_|   |_|_|   |_|_______|_|  |__| |___|    |__| |__|___|   |___|
-	
+	.-------------.
+	| WORKOUT API |
+	'-------------'
 	`)
 
 	app := App{}

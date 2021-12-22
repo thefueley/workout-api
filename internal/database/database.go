@@ -8,7 +8,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
-// NewDatabse : return pointer to db object
+// NewDatabase : return pointer to db object
 func NewDatabase() (*gorm.DB, error) {
 	fmt.Println("Setting up DB connection")
 
