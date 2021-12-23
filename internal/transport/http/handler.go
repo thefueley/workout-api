@@ -9,7 +9,7 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"github.com/thefueley/workout-api/internal/workout"
 )
 
@@ -35,27 +35,11 @@ func NewHandler(service *workout.Service) *Handler {
 // LoggingMiddleware - a handy middleware function that logs out incoming requests
 func LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.WithFields(
-			log.Fields{
-				"Method": r.Method,
-				"Path":   r.URL.Path,
-			}).
-			Info("handled request")
+		ev := []string{"Method", r.Method, "Path", r.URL.Path}
+
+		log.Info().Strs("API", ev).Msg("")
 		next.ServeHTTP(w, r)
 	})
-}
-
-// BasicAuth - a handy middleware function that logs out incoming requests
-func BasicAuth(original func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		user, pass, ok := r.BasicAuth()
-		if user == "admin" && pass == "password" && ok {
-			original(w, r)
-		} else {
-			sendErrorResponse(w, "not authorized", errors.New("not authorized"))
-			return
-		}
-	}
 }
 
 // validateToken - validates an incoming jwt token
@@ -79,7 +63,7 @@ func validateToken(accessToken string) bool {
 // JWTAuth - a handy middleware function that will provide basic auth around specific endpoints
 func JWTAuth(original func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Info("jwt auth endpoint hit")
+		log.Info().Msg("jwt auth endpoint hit")
 		authHeader := r.Header["Authorization"]
 		if authHeader == nil {
 			sendErrorResponse(w, "not authorized", errors.New("not authorized"))
@@ -103,7 +87,7 @@ func JWTAuth(original func(w http.ResponseWriter, r *http.Request)) func(w http.
 
 // SetupRoutes : sets up routes for app
 func (h *Handler) SetupRoutes() {
-	log.Info("Setting up Routes")
+	log.Info().Msg("Setting up Routes")
 	h.Router = mux.NewRouter()
 	h.Router.Use(LoggingMiddleware)
 
@@ -133,6 +117,6 @@ func sendErrorResponse(w http.ResponseWriter, message string, err error) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 	if err := json.NewEncoder(w).Encode(Response{Message: message, Error: err.Error()}); err != nil {
-		log.Error(err)
+		log.Error().Msg(err.Error())
 	}
 }

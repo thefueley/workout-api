@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/thefueley/workout-api/internal/database"
 	transportHTTP "github.com/thefueley/workout-api/internal/transport/http"
 	"github.com/thefueley/workout-api/internal/workout"
@@ -17,12 +19,9 @@ type App struct {
 
 // Run : Sets up app
 func (app *App) Run() error {
-	log.SetFormatter(&log.JSONFormatter{})
-	log.WithFields(
-		log.Fields{
-			"AppName":    app.Name,
-			"AppVersion": app.Version,
-		}).Info("Setting up API")
+	appInf := []string{"AppName:", app.Name, "AppVersion:", app.Version}
+	log.Info().Strs("APP INFO: ", appInf).Msg("")
+	log.Info().Msg("Setting up API")
 
 	var err error
 
@@ -42,7 +41,7 @@ func (app *App) Run() error {
 	handler.SetupRoutes()
 
 	if err := http.ListenAndServe(":8080", handler.Router); err != nil {
-		log.Error("Failed to setup server")
+		log.Error().Msg("Failed to setup server")
 		return err
 	}
 
@@ -50,7 +49,8 @@ func (app *App) Run() error {
 }
 
 func main() {
-	log.Info(`
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	fmt.Println(`
 	.-------------.
 	| WORKOUT API |
 	'-------------'
@@ -61,7 +61,7 @@ func main() {
 		Version: "1.0.0",
 	}
 	if err := app.Run(); err != nil {
-		log.Error("Error starting REST API")
-		log.Fatal(err)
+		log.Error().Msg("Error starting REST API")
+		log.Fatal().Msg(err.Error())
 	}
 }
