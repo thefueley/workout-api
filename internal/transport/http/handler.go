@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -41,6 +42,19 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// BasicAuth - a handy middleware function that logs out incoming requests
+func BasicAuth(original func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, pass, ok := r.BasicAuth()
+		if user == "admin" && pass == "password" && ok {
+			original(w, r)
+		} else {
+			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+			sendErrorResponse(w, "not authorized", errors.New("not authorized"))
+		}
+	}
+}
+
 // SetupRoutes : sets up routes for app
 func (h *Handler) SetupRoutes() {
 	log.Info("Setting up Routes")
@@ -48,9 +62,9 @@ func (h *Handler) SetupRoutes() {
 	h.Router.Use(LoggingMiddleware)
 
 	h.Router.HandleFunc("/api/workout/{id}", h.GetWorkout).Methods("GET")
-	h.Router.HandleFunc("/api/workout", h.AddWorkout).Methods("POST")
-	h.Router.HandleFunc("/api/workout/{id}", h.UpdateWorkout).Methods("PUT")
-	h.Router.HandleFunc("/api/workout/{id}", h.DeleteWorkout).Methods("DELETE")
+	h.Router.HandleFunc("/api/workout", BasicAuth(h.AddWorkout)).Methods("POST")
+	h.Router.HandleFunc("/api/workout/{id}", BasicAuth(h.UpdateWorkout)).Methods("PUT")
+	h.Router.HandleFunc("/api/workout/{id}", BasicAuth(h.DeleteWorkout)).Methods("DELETE")
 	h.Router.HandleFunc("/api/workout", h.GetAllWorkouts).Methods("GET")
 
 	h.Router.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
