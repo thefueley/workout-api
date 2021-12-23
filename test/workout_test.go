@@ -9,6 +9,17 @@ import (
 	"testing"
 )
 
+func TestAddWorkout(t *testing.T) {
+	client := resty.New()
+	resp, err := client.R().
+		SetBody(`{"id":1,"date":"unknown","exercises":[{"id":1,"name":"n/a","weight":1,"sets":1,"reps":1,"warmup":true},{"id":2,"name":"n/a","weight":1,"sets":1,"reps":1,"warmup":true},{"id":3,"name":"n/a","weight":1,"sets":1,"reps":1,"warmup":true},{"id":4,"name":"n/a","weight":1,"sets":1,"reps":1,"warmup":false},{"id":5,"name":"n/a","weight":1,"sets":1,"reps":1,"warmup":false},{"id":6,"name":"n/a","weight":1,"sets":1,"reps":1,"warmup":false},{"id":7,"name":"n/a","weight":1,"sets":1,"reps":1,"warmup":false}]}`).
+		Post(BASE_URL + "/api/workout")
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, 200, resp.StatusCode())
+}
+
 func TestGetWorkout(t *testing.T) {
 	client := resty.New()
 	resp, err := client.R().Get(BASE_URL + "/api/workout/1")
@@ -31,21 +42,10 @@ func TestGetAllWorkouts(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode())
 }
 
-func TestAddWorkout(t *testing.T) {
-	client := resty.New()
-	resp, err := client.R().
-		SetBody(`{"date": "21 DEC 2021", "duration": "1 hr 0 mins", "exercise": [{"name": "deadlift", "weight": 175, "set": 1, "rep": 5}, {"name": "deadlift", "weight": 215, "set": 1, "rep": 5}, {"name": "deadlift", "weight": 235, "set": 1, "rep": 3}]}`).
-		Post(BASE_URL + "/api/workout")
-
-	assert.NoError(t, err)
-
-	assert.Equal(t, 200, resp.StatusCode())
-}
-
 func TestUpdateWorkout(t *testing.T) {
 	client := resty.New()
 	resp, err := client.R().
-		SetBody(`{"date": "32 DEC 1999", "duration": "0 hr 0 mins", "exercise": [{"id": 1, "name": "curl", "weight": 1, "set": 1, "rep": 1}, {"id": 2,"name": "curl", "weight": 1, "set": 1, "rep": 1}, {"id": 3,"name": "curl", "weight": 1, "set": 1, "rep": 1}]}`).
+		SetBody(`{"id":1,"date":"unknown","exercises":[{"id":1,"name":"n/a","weight":111,"sets":111,"reps":111,"warmup":true},{"id":2,"name":"n/a","weight":111,"sets":111,"reps":111,"warmup":true},{"id":3,"name":"n/a","weight":111,"sets":111,"reps":111,"warmup":true},{"id":4,"name":"n/a","weight":111,"sets":111,"reps":111,"warmup":true},{"id":5,"name":"n/a","weight":111,"sets":111,"reps":111,"warmup":true},{"id":6,"name":"n/a","weight":111,"sets":111,"reps":111,"warmup":true},{"id":7,"name":"n/a","weight":111,"sets":111,"reps":111,"warmup":true}]}`).
 		Put(BASE_URL + "/api/workout/1")
 
 	assert.NoError(t, err)
@@ -55,7 +55,7 @@ func TestUpdateWorkout(t *testing.T) {
 
 func TestDeleteWorkout(t *testing.T) {
 	client := resty.New()
-	resp, err := client.R().Delete(BASE_URL + "/api/workout/6")
+	resp, err := client.R().Delete(BASE_URL + "/api/workout/1")
 
 	assert.NoError(t, err)
 

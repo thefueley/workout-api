@@ -12,9 +12,8 @@ type Service struct {
 // Workout : struct
 type Workout struct {
 	gorm.Model
-	Date     string
-	Duration string
-	Exercise []Exercise
+	Date      string
+	Exercises []Exercise
 }
 
 // Exercise : exercises
@@ -23,8 +22,9 @@ type Exercise struct {
 	WorkoutID uint
 	Name      string
 	Weight    uint
-	Set       uint
-	Rep       uint
+	Sets      uint
+	Reps      uint
+	Warmup    bool
 }
 
 // CommentService : interface for workout service
@@ -47,7 +47,7 @@ func NewService(db *gorm.DB) *Service {
 func (s *Service) GetWorkout(db *gorm.DB, ID uint) (Workout, error) {
 	var workout Workout
 
-	db.Preload("Exercise").Where("id = ? ", ID).First(&workout)
+	db.Preload("Exercises").Where("id = ? ", ID).First(&workout)
 
 	if result := s.DB.First(&workout, ID); result.Error != nil {
 		return Workout{}, result.Error
@@ -96,7 +96,7 @@ func (s *Service) DeleteWorkout(ID uint) error {
 func (s *Service) GetAllWorkouts(db *gorm.DB) ([]Workout, error) {
 	var workouts []Workout
 
-	if result := db.Preload("Exercise").Find(&workouts); result.Error != nil {
+	if result := db.Preload("Exercises").Find(&workouts); result.Error != nil {
 		return []Workout{}, result.Error
 	}
 	return workouts, nil
