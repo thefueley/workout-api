@@ -3,8 +3,11 @@ package http
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"github.com/thefueley/workout-api/internal/workout"
@@ -49,8 +52,51 @@ func BasicAuth(original func(w http.ResponseWriter, r *http.Request)) func(w htt
 		if user == "admin" && pass == "password" && ok {
 			original(w, r)
 		} else {
-			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 			sendErrorResponse(w, "not authorized", errors.New("not authorized"))
+			return
+		}
+	}
+}
+
+// validateToken - validates an incoming jwt token
+func validateToken(accessToken string) bool {
+	// replace this by loading in a private RSA cert for more security
+	var mySigningKey = []byte("missionimpossible")
+	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("there was an error")
+		}
+		return mySigningKey, nil
+	})
+
+	if err != nil {
+		return false
+	}
+
+	return token.Valid
+}
+
+// JWTAuth - a handy middleware function that will provide basic auth around specific endpoints
+func JWTAuth(original func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Info("jwt auth endpoint hit")
+		authHeader := r.Header["Authorization"]
+		if authHeader == nil {
+			sendErrorResponse(w, "not authorized", errors.New("not authorized"))
+			return
+		}
+
+		authHeaderParts := strings.Split(authHeader[0], " ")
+		if len(authHeaderParts) != 2 || strings.ToLower(authHeaderParts[0]) != "bearer" {
+			sendErrorResponse(w, "not authorized", errors.New("not authorized"))
+			return
+		}
+
+		if validateToken(authHeaderParts[1]) {
+			original(w, r)
+		} else {
+			sendErrorResponse(w, "not authorized", errors.New("not authorized"))
+			return
 		}
 	}
 }
@@ -62,9 +108,9 @@ func (h *Handler) SetupRoutes() {
 	h.Router.Use(LoggingMiddleware)
 
 	h.Router.HandleFunc("/api/workout/{id}", h.GetWorkout).Methods("GET")
-	h.Router.HandleFunc("/api/workout", BasicAuth(h.AddWorkout)).Methods("POST")
-	h.Router.HandleFunc("/api/workout/{id}", BasicAuth(h.UpdateWorkout)).Methods("PUT")
-	h.Router.HandleFunc("/api/workout/{id}", BasicAuth(h.DeleteWorkout)).Methods("DELETE")
+	h.Router.HandleFunc("/api/workout", JWTAuth(h.AddWorkout)).Methods("POST")
+	h.Router.HandleFunc("/api/workout/{id}", JWTAuth(h.UpdateWorkout)).Methods("PUT")
+	h.Router.HandleFunc("/api/workout/{id}", JWTAuth(h.DeleteWorkout)).Methods("DELETE")
 	h.Router.HandleFunc("/api/workout", h.GetAllWorkouts).Methods("GET")
 
 	h.Router.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
@@ -83,10 +129,10 @@ func sendOkResponse(w http.ResponseWriter, resp interface{}) error {
 
 // sendErrorResponse : send error response
 func sendErrorResponse(w http.ResponseWriter, message string, err error) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusInternalServerError)
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 	if err := json.NewEncoder(w).Encode(Response{Message: message, Error: err.Error()}); err != nil {
-		panic(err)
+		log.Error(err)
 	}
 }
