@@ -2,11 +2,11 @@ package http
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 	"github.com/thefueley/workout-api/internal/workout"
 )
 
@@ -31,7 +31,7 @@ func NewHandler(service *workout.Service) *Handler {
 
 // SetupRoutes : sets up routes for app
 func (h *Handler) SetupRoutes() {
-	fmt.Println("Setting up Routes")
+	log.Info("Setting up Routes")
 	h.Router = mux.NewRouter()
 
 	h.Router.HandleFunc("/api/workout/{id}", h.GetWorkout).Methods("GET")
