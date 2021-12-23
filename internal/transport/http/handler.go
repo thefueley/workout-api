@@ -60,7 +60,7 @@ func (h *Handler) GetWorkout(w http.ResponseWriter, r *http.Request) {
 
 	cmt, err := h.Service.GetWorkout(uint(i))
 	if err != nil {
-		sendErrorResponse(w, "Error retrieving comment by ID.\nPunt", err)
+		sendErrorResponse(w, "Error retrieving workout by ID.\nPunt", err)
 		return
 	}
 
@@ -80,7 +80,7 @@ func (h *Handler) AddWorkout(w http.ResponseWriter, r *http.Request) {
 	cmt, err := h.Service.AddWorkout(work)
 
 	if err != nil {
-		sendErrorResponse(w, "Failed ot post comment.\nPunt!", err)
+		sendErrorResponse(w, "Error adding workout.\nPunt!", err)
 		return
 	}
 
@@ -109,7 +109,7 @@ func (h *Handler) UpdateWorkout(w http.ResponseWriter, r *http.Request) {
 	work, err = h.Service.UpdateComment(uint(workoutID), work)
 
 	if err != nil {
-		sendErrorResponse(w, "Failed to update comment.\nPunt!", err)
+		sendErrorResponse(w, "Error updating workout.\nPunt!", err)
 		return
 	}
 
@@ -131,11 +131,11 @@ func (h *Handler) DeleteWorkout(w http.ResponseWriter, r *http.Request) {
 
 	err = h.Service.DeleteWorkout(uint(workoutID))
 	if err != nil {
-		sendErrorResponse(w, "Error deleting comment.\nPunt!", err)
+		sendErrorResponse(w, "Error deleting workout.\nPunt!", err)
 		return
 	}
 
-	if err = sendOkResponse(w, Response{Message: "Poof, message deleted!"}); err != nil {
+	if err = sendOkResponse(w, Response{Message: "Poof! Workout deleted."}); err != nil {
 		panic(err)
 	}
 }
@@ -145,7 +145,7 @@ func (h *Handler) GetAllWorkouts(w http.ResponseWriter, r *http.Request) {
 	workouts, err := h.Service.GetAllWorkouts()
 
 	if err != nil {
-		sendErrorResponse(w, "Failed to retrieve all comments.\nPunt!", err)
+		sendErrorResponse(w, "Error retrieving all workouts.\nPunt!", err)
 		return
 	}
 

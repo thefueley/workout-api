@@ -13,7 +13,7 @@ type Workout struct {
 	Date     string
 	Type     string
 	Duration string
-	Exercise []string
+	Exercise string
 }
 
 // CommentService : interface for workout service
