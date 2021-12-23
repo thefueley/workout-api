@@ -1,6 +1,8 @@
 package workout
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+)
 
 // Service : comment service
 type Service struct {
@@ -11,9 +13,18 @@ type Service struct {
 type Workout struct {
 	gorm.Model
 	Date     string
-	Type     string
 	Duration string
-	Exercise string
+	Exercise []Exercise
+}
+
+// Exercise : exercises
+type Exercise struct {
+	gorm.Model
+	WorkoutID uint
+	Name      string
+	Weight    uint
+	Set       uint
+	Rep       uint
 }
 
 // CommentService : interface for workout service
@@ -33,8 +44,11 @@ func NewService(db *gorm.DB) *Service {
 }
 
 // GetWorkout : get workout
-func (s *Service) GetWorkout(ID uint) (Workout, error) {
+func (s *Service) GetWorkout(db *gorm.DB, ID uint) (Workout, error) {
 	var workout Workout
+
+	db.Preload("Exercise").Where("id = ? ", ID).First(&workout)
+
 	if result := s.DB.First(&workout, ID); result.Error != nil {
 		return Workout{}, result.Error
 	}
@@ -50,8 +64,8 @@ func (s *Service) AddWorkout(workout Workout) (Workout, error) {
 }
 
 // UpdateWorkout : update workout
-func (s *Service) UpdateComment(ID uint, newWorkout Workout) (Workout, error) {
-	workout, err := s.GetWorkout(ID)
+func (s *Service) UpdateWorkout(ID uint, newWorkout Workout) (Workout, error) {
+	workout, err := s.GetWorkout(s.DB, ID)
 
 	if err != nil {
 		return Workout{}, err
@@ -67,7 +81,7 @@ func (s *Service) UpdateComment(ID uint, newWorkout Workout) (Workout, error) {
 // DeleteWorkout : delete workout
 func (s *Service) DeleteWorkout(ID uint) error {
 	// check if workout exists
-	if _, err := s.GetWorkout(ID); err != nil {
+	if _, err := s.GetWorkout(s.DB, ID); err != nil {
 		return err
 	}
 
@@ -79,10 +93,11 @@ func (s *Service) DeleteWorkout(ID uint) error {
 }
 
 // GetAllWorkouts : get all workouts
-func (s *Service) GetAllWorkouts() ([]Workout, error) {
+func (s *Service) GetAllWorkouts(db *gorm.DB) ([]Workout, error) {
 	var workouts []Workout
-	if result := s.DB.Find(&workouts); result.Error != nil {
-		return workouts, result.Error
+
+	if result := db.Preload("Exercise").Find(&workouts); result.Error != nil {
+		return []Workout{}, result.Error
 	}
 	return workouts, nil
 }

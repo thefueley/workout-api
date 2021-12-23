@@ -58,7 +58,7 @@ func (h *Handler) GetWorkout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cmt, err := h.Service.GetWorkout(uint(i))
+	cmt, err := h.Service.GetWorkout(h.Service.DB, uint(i))
 	if err != nil {
 		sendErrorResponse(w, "Error retrieving workout by ID.\nPunt", err)
 		return
@@ -92,6 +92,7 @@ func (h *Handler) AddWorkout(w http.ResponseWriter, r *http.Request) {
 // UpdateWorkout : update workout
 func (h *Handler) UpdateWorkout(w http.ResponseWriter, r *http.Request) {
 	var work workout.Workout
+
 	if err := json.NewDecoder(r.Body).Decode(&work); err != nil {
 		sendErrorResponse(w, "Failed to decode JSON Body.\nPunt!", err)
 		return
@@ -106,7 +107,7 @@ func (h *Handler) UpdateWorkout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	work, err = h.Service.UpdateComment(uint(workoutID), work)
+	work, err = h.Service.UpdateWorkout(uint(workoutID), work)
 
 	if err != nil {
 		sendErrorResponse(w, "Error updating workout.\nPunt!", err)
@@ -142,7 +143,7 @@ func (h *Handler) DeleteWorkout(w http.ResponseWriter, r *http.Request) {
 
 // GetAllWorkouts : get all workouts
 func (h *Handler) GetAllWorkouts(w http.ResponseWriter, r *http.Request) {
-	workouts, err := h.Service.GetAllWorkouts()
+	workouts, err := h.Service.GetAllWorkouts(h.Service.DB)
 
 	if err != nil {
 		sendErrorResponse(w, "Error retrieving all workouts.\nPunt!", err)
