@@ -1,35 +1,22 @@
 package database
 
 import (
-	"fmt"
 	"os"
 
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/Azure/azure-sdk-for-go/sdk/data/aztables"
 	"github.com/rs/zerolog/log"
 )
 
 // NewDatabase : return pointer to db object
-func NewDatabase() (*gorm.DB, error) {
+func NewDatabase() (*aztables.ServiceClient, error) {
 	log.Info().Msg("Setting up DB connection")
 
-	dbUsername := os.Getenv("DB_USERNAME")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbHost := os.Getenv("DB_HOST")
-	dbTable := os.Getenv("DB_TABLE")
-	dbPort := os.Getenv("DB_PORT")
+	connectionString := os.Getenv("AZ_TABLE_CONN_STR")
 
-	connectionString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&TimeZone=America/New_York", dbUsername, dbPassword, dbHost, dbPort, dbTable)
-
-	db, err := gorm.Open("postgres", connectionString)
+	service, err := aztables.NewServiceClientFromConnectionString(connectionString, nil)
 
 	if err != nil {
-		return db, err
+		log.Error().Msg(err.Error())
 	}
-
-	if err := db.DB().Ping(); err != nil {
-		return db, err
-	}
-
-	return db, nil
+	return service, nil
 }

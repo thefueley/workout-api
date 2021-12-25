@@ -1,18 +1,40 @@
 package database
 
 import (
-	"github.com/jinzhu/gorm"
-	"github.com/thefueley/workout-api/internal/workout"
+	"context"
+	"fmt"
+	"os"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/data/aztables"
+	"github.com/rs/zerolog/log"
 )
 
 // MigrateDb : migrate db and create comment table
-func MigrateDB(db *gorm.DB) error {
-	if workout_result := db.AutoMigrate(&workout.Workout{}); workout_result.Error != nil {
-		return workout_result.Error
+func MigrateDB(svc *aztables.ServiceClient) error {
+	tableName := os.Getenv("AZ_TABLE_NAME")
+	// check if az table exists
+	filter := fmt.Sprintf("TableName eq '%s'", tableName)
+	options := &aztables.ListTablesOptions{
+		Filter: &filter,
 	}
 
-	if exercise_result := db.AutoMigrate(&workout.Exercise{}); exercise_result.Error != nil {
-		return exercise_result.Error
+	var tableExists aztables.ListTablesPage
+	pager := svc.ListTables(options)
+
+	for pager.NextPage(context.TODO()) {
+		tableExists = pager.PageResponse()
+		fmt.Printf("Received: %+v\n", len(tableExists.Tables))
+	}
+
+	if len(tableExists.Tables) > 0 {
+		log.Info().Msg("Table already exists.")
+	} else {
+		// create table
+		_, err := svc.CreateTable(context.TODO(), tableName, nil)
+		if err != nil {
+			log.Error().Msg(err.Error())
+			return err
+		}
 	}
 
 	return nil
