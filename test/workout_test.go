@@ -9,10 +9,13 @@ import (
 	"testing"
 )
 
+var addWOBody = `{"PartitionKey":"Fake","RowKey":"1999","Date":"2020-01-26T00:00:00.000Z", "Weight": 185, "Reps": 3, "Sets": 1, "Warmup": true}`
+var updateWOBody = `{"PartitionKey":"Fake","RowKey":"1999","Date":"2020-01-26T00:00:00.000Z", "Weight": 195, "Reps": 3, "Sets": 1, "Warmup": true}`
+
 func TestAddWorkout(t *testing.T) {
 	client := resty.New()
 	resp, err := client.R().
-		SetBody(`{"id":1,"date":"unknown","exercises":[{"id":1,"name":"n/a","weight":1,"sets":1,"reps":1,"warmup":true},{"id":2,"name":"n/a","weight":1,"sets":1,"reps":1,"warmup":true},{"id":3,"name":"n/a","weight":1,"sets":1,"reps":1,"warmup":true},{"id":4,"name":"n/a","weight":1,"sets":1,"reps":1,"warmup":false},{"id":5,"name":"n/a","weight":1,"sets":1,"reps":1,"warmup":false},{"id":6,"name":"n/a","weight":1,"sets":1,"reps":1,"warmup":false},{"id":7,"name":"n/a","weight":1,"sets":1,"reps":1,"warmup":false}]}`).
+		SetBody(addWOBody).
 		Post(BASE_URL + "/api/workout")
 
 	assert.NoError(t, err)
@@ -22,7 +25,7 @@ func TestAddWorkout(t *testing.T) {
 
 func TestGetWorkout(t *testing.T) {
 	client := resty.New()
-	resp, err := client.R().Get(BASE_URL + "/api/workout/1")
+	resp, err := client.R().Get(BASE_URL + "/api/workout/Fake/1999")
 
 	if err != nil {
 		t.Fail()
@@ -45,8 +48,8 @@ func TestGetAllWorkouts(t *testing.T) {
 func TestUpdateWorkout(t *testing.T) {
 	client := resty.New()
 	resp, err := client.R().
-		SetBody(`{"id":1,"date":"unknown","exercises":[{"id":1,"name":"n/a","weight":111,"sets":111,"reps":111,"warmup":true},{"id":2,"name":"n/a","weight":111,"sets":111,"reps":111,"warmup":true},{"id":3,"name":"n/a","weight":111,"sets":111,"reps":111,"warmup":true},{"id":4,"name":"n/a","weight":111,"sets":111,"reps":111,"warmup":true},{"id":5,"name":"n/a","weight":111,"sets":111,"reps":111,"warmup":true},{"id":6,"name":"n/a","weight":111,"sets":111,"reps":111,"warmup":true},{"id":7,"name":"n/a","weight":111,"sets":111,"reps":111,"warmup":true}]}`).
-		Put(BASE_URL + "/api/workout/1")
+		SetBody(updateWOBody).
+		Put(BASE_URL + "/api/workout/Fake/1999")
 
 	assert.NoError(t, err)
 
@@ -55,7 +58,7 @@ func TestUpdateWorkout(t *testing.T) {
 
 func TestDeleteWorkout(t *testing.T) {
 	client := resty.New()
-	resp, err := client.R().Delete(BASE_URL + "/api/workout/1")
+	resp, err := client.R().Delete(BASE_URL + "/api/workout/Fake/1999")
 
 	assert.NoError(t, err)
 
