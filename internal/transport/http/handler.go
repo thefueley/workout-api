@@ -91,10 +91,10 @@ func (h *Handler) SetupRoutes() {
 	h.Router = mux.NewRouter()
 	h.Router.Use(LoggingMiddleware)
 
-	h.Router.HandleFunc("/api/workout/{id}", h.GetWorkout).Methods("GET")
-	h.Router.HandleFunc("/api/workout", JWTAuth(h.AddWorkout)).Methods("POST")
-	h.Router.HandleFunc("/api/workout/{id}", JWTAuth(h.UpdateWorkout)).Methods("PUT")
-	h.Router.HandleFunc("/api/workout/{id}", JWTAuth(h.DeleteWorkout)).Methods("DELETE")
+	h.Router.HandleFunc("/api/workout/{pKey}/{rKey}", h.GetWorkout).Methods("GET")
+	h.Router.HandleFunc("/api/workout", h.AddWorkout).Methods("POST")
+	h.Router.HandleFunc("/api/workout/{pKey}/{rKey}", h.UpdateWorkout).Methods("PUT")
+	h.Router.HandleFunc("/api/workout/{pKey}/{rKey}", h.DeleteWorkout).Methods("DELETE")
 	h.Router.HandleFunc("/api/workout", h.GetAllWorkouts).Methods("GET")
 
 	h.Router.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
