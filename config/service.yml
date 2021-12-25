@@ -2,11 +2,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: comments-api
+  name: workout-api
 spec:
   type: NodePort
   selector:
-    name: comments-api
+    name: workout-api
   ports:
   - protocol: TCP
     port: 8080

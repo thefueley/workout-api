@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: comments-api
+  name: workout-api
 spec:
   replicas: 3
   strategy:
@@ -12,26 +12,20 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      name: comments-api
+      name: workout-api
   template:
     metadata:
       labels:
-        name: comments-api
+        name: workout-api
     spec:
       containers:
       - name: application
-        image: "thefueley/comments-api:latest"
+        image: "thefueley/workout-api:latest"
         imagePullPolicy: Always
         ports:
           - containerPort: 8080
         env:
-          - name: DB_PORT
-            value: "$DB_PORT"
-          - name: DB_HOST
-            value: "$DB_HOST"
-          - name: DB_PASSWORD
-            value: "$DB_PASSWORD"
-          - name: DB_TABLE
-            value: "$DB_TABLE"
-          - name: DB_USERNAME
-            value: "$DB_USERNAME"
+          - name: AZ_TABLE_CONN_STR
+            value: "$AZ_TABLE_CONN_STR"
+          - name: AZ_TABLE_NAME
+            value: "$AZ_TABLE_NAME"
