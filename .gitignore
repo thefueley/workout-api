@@ -15,3 +15,6 @@
 # vendor/
 
 *.code-workspace
+
+# OS X 
+.DS_Store
