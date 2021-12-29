@@ -1,4 +1,4 @@
-package workout
+package models
 
 import (
 	"context"

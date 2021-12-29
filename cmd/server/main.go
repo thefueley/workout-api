@@ -6,9 +6,8 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/thefueley/workout-api/internal/database"
-	transportHTTP "github.com/thefueley/workout-api/internal/transport/http"
-	"github.com/thefueley/workout-api/internal/workout"
+	transportHTTP "github.com/thefueley/workout-api/controllers"
+	"github.com/thefueley/workout-api/models"
 )
 
 // App : app info
@@ -25,17 +24,17 @@ func (app *App) Run() error {
 
 	var err error
 
-	db, err := database.NewDatabase()
+	db, err := models.NewDatabase()
 	if err != nil {
 		return err
 	}
 
-	err = database.MigrateDB(db)
+	err = models.MigrateDB(db)
 	if err != nil {
 		return err
 	}
 
-	workoutService := workout.NewService(db)
+	workoutService := models.NewService(db)
 
 	handler := transportHTTP.NewHandler(workoutService)
 	handler.SetupRoutes()

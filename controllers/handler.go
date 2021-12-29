@@ -1,4 +1,4 @@
-package http
+package controllers
 
 import (
 	"encoding/json"
@@ -10,13 +10,13 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
-	"github.com/thefueley/workout-api/internal/workout"
+	"github.com/thefueley/workout-api/models"
 )
 
 // Handler : stores pointer to workout service
 type Handler struct {
 	Router  *mux.Router
-	Service *workout.Service
+	Service *models.Service
 }
 
 // Response : store responses from API
@@ -26,7 +26,7 @@ type Response struct {
 }
 
 // NewHandler : returns pointer to a Handler
-func NewHandler(service *workout.Service) *Handler {
+func NewHandler(service *models.Service) *Handler {
 	return &Handler{
 		Service: service,
 	}

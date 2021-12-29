@@ -1,11 +1,11 @@
-package http
+package controllers
 
 import (
 	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/thefueley/workout-api/internal/workout"
+	"github.com/thefueley/workout-api/models"
 )
 
 // GetWorkout : get workout
@@ -27,7 +27,7 @@ func (h *Handler) GetWorkout(w http.ResponseWriter, r *http.Request) {
 
 // AddWorkout : add a workout
 func (h *Handler) AddWorkout(w http.ResponseWriter, r *http.Request) {
-	var unmarshaledWorkout workout.Workout
+	var unmarshaledWorkout models.Workout
 	if err := json.NewDecoder(r.Body).Decode(&unmarshaledWorkout); err != nil {
 		sendErrorResponse(w, "Failed to decode JSON Body.\nPunt!", err)
 		return
@@ -47,7 +47,7 @@ func (h *Handler) AddWorkout(w http.ResponseWriter, r *http.Request) {
 
 // UpdateWorkout : update workout
 func (h *Handler) UpdateWorkout(w http.ResponseWriter, r *http.Request) {
-	var unmarshalledWorkout workout.Workout
+	var unmarshalledWorkout models.Workout
 
 	if err := json.NewDecoder(r.Body).Decode(&unmarshalledWorkout); err != nil {
 		sendErrorResponse(w, "Failed to decode JSON Body.\nPunt!", err)
