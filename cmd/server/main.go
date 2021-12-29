@@ -39,6 +39,9 @@ func (app *App) Run() error {
 	handler := transportHTTP.NewHandler(workoutService)
 	handler.SetupRoutes()
 
+	// debug : print token
+	transportHTTP.CreateToken()
+
 	if err := http.ListenAndServe(":8080", handler.Router); err != nil {
 		log.Error().Msg("Failed to setup server")
 		return err

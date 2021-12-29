@@ -3,15 +3,17 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"github.com/thefueley/workout-api/models"
 )
+
+var hmacSigningKey = []byte(os.Getenv("WORKOUT_API_TOKEN"))
 
 // Handler : stores pointer to workout service
 type Handler struct {
@@ -42,21 +44,36 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// validateToken - validates an incoming jwt token
-func validateToken(accessToken string) bool {
-	// replace this by loading in a private RSA cert for more security
-	var mySigningKey = []byte("missionimpossible")
-	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("there was an error")
-		}
-		return mySigningKey, nil
+// createToken : create JWT
+func CreateToken() {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"PartitionKey": "Squat",
+		"RowKey":       "1313",
 	})
 
-	if err != nil {
-		return false
-	}
+	// Sign and get the complete encoded token as a string using the secret
+	tokenString, err := token.SignedString(hmacSigningKey)
 
+	log.Info().Msgf("tokenString: %s Error: %v", tokenString, err)
+}
+
+// validateToken : validates an incoming jwt token
+func validateToken(accessToken string) bool {
+	//myKey := []byte(hmacSigningKey)
+	// Parse takes the token string and a function for looking up the key. The latter is especially
+	// useful if you use multiple keys for your application.  The standard is to use 'kid' in the
+	// head of the token to identify which key to use, but the parsed token (head and claims) is provided
+	// to the callback, providing flexibility.
+	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
+		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
+		return hmacSigningKey, nil
+	})
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		log.Info().Msgf("claims[%v], claims[%v]", claims["PartitionKey"], claims["RowKey"])
+	} else {
+		log.Error().Msg(err.Error())
+	}
 	return token.Valid
 }
 
@@ -65,13 +82,17 @@ func JWTAuth(original func(w http.ResponseWriter, r *http.Request)) func(w http.
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Info().Msg("jwt auth endpoint hit")
 		authHeader := r.Header["Authorization"]
+
 		if authHeader == nil {
+			log.Error().Msg("authHeader is nil")
 			sendErrorResponse(w, "not authorized", errors.New("not authorized"))
 			return
 		}
 
 		authHeaderParts := strings.Split(authHeader[0], " ")
+
 		if len(authHeaderParts) != 2 || strings.ToLower(authHeaderParts[0]) != "bearer" {
+			log.Error().Msg("authHeaderParts != 2 or does not contain bearer")
 			sendErrorResponse(w, "not authorized", errors.New("not authorized"))
 			return
 		}
@@ -79,6 +100,7 @@ func JWTAuth(original func(w http.ResponseWriter, r *http.Request)) func(w http.
 		if validateToken(authHeaderParts[1]) {
 			original(w, r)
 		} else {
+			log.Error().Msg("Token is invalid")
 			sendErrorResponse(w, "not authorized", errors.New("not authorized"))
 			return
 		}
@@ -91,11 +113,11 @@ func (h *Handler) SetupRoutes() {
 	h.Router = mux.NewRouter()
 	h.Router.Use(LoggingMiddleware)
 
-	h.Router.HandleFunc("/api/workout/{pKey}/{rKey}", h.GetWorkout).Methods("GET")
-	h.Router.HandleFunc("/api/workout", h.AddWorkout).Methods("POST")
-	h.Router.HandleFunc("/api/workout/{pKey}/{rKey}", h.UpdateWorkout).Methods("PUT")
-	h.Router.HandleFunc("/api/workout/{pKey}/{rKey}", h.DeleteWorkout).Methods("DELETE")
-	h.Router.HandleFunc("/api/workout", h.GetAllWorkouts).Methods("GET")
+	h.Router.HandleFunc("/api/workout/{pKey}/{rKey}", JWTAuth(h.GetWorkout)).Methods("GET")
+	h.Router.HandleFunc("/api/workout", JWTAuth(h.AddWorkout)).Methods("POST")
+	h.Router.HandleFunc("/api/workout/{pKey}/{rKey}", JWTAuth(h.UpdateWorkout)).Methods("PUT")
+	h.Router.HandleFunc("/api/workout/{pKey}/{rKey}", JWTAuth(h.DeleteWorkout)).Methods("DELETE")
+	h.Router.HandleFunc("/api/workout", JWTAuth(h.GetAllWorkouts)).Methods("GET")
 
 	h.Router.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
 		if err := sendOkResponse(w, Response{Message: "Hooray for me!"}); err != nil {

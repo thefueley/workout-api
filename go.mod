@@ -5,8 +5,8 @@ go 1.17
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/data/aztables v0.4.0
 	github.com/Azure/go-autorest/autorest/to v0.4.0
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-resty/resty/v2 v2.7.0
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/mux v1.8.0
 	github.com/rs/zerolog v1.26.1
 	github.com/stretchr/testify v1.7.0
